@@ -2,6 +2,7 @@
 
 import { v2 } from '@google-cloud/translate';
 import { Inject } from '@nestjs/common';
+import { response } from 'express';
 const { Translate } = v2;
 import { EntityManager } from 'typeorm';
 
@@ -17,7 +18,7 @@ export class Translator {
 
             delete request.language_code;
 
-            await entityManager.getRepository(table_en).save(request);
+           let response = await entityManager.getRepository(table_en).save(request);
 
             let toTranslate = await entityManager.getRepository('table_metadata').find({ where :{ main_table_name : table_en }, select: { translatable_fields : true } })
             // let con
@@ -47,6 +48,8 @@ export class Translator {
            } else {
 
            }
+
+           return response;
 
         } catch(error) {
 
