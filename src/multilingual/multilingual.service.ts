@@ -10,13 +10,6 @@ export class Translator {
 
     constructor() {}
 
-    async translation( googleTranslator : any, text : Array<string> | string, target_language : string ) : Promise<any> {
-        let [translations] = await googleTranslator.translate(text, target_language);
-        translations = Array.isArray(translations) ? translations : [translations];
-        return translations[0];
-    }
-
-    // translate by service
     async createEntity( request : any, table_en :string, entityManager : EntityManager, googleTranslator :any) :Promise<any> {
         try {
 
@@ -59,6 +52,15 @@ export class Translator {
 
         }
     }
+
+    async translation( googleTranslator : any, text : Array<string> | string, target_language : string ) : Promise<any> {
+        let [translations] = await googleTranslator.translate(text, target_language);
+        translations = Array.isArray(translations) ? translations : [translations];
+        return translations[0];
+    }
+
+    // translate by service
+    
     // 
 
 }
