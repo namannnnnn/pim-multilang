@@ -59,7 +59,7 @@ export class Translator {
               i < toTranslate[0].translatable_fields.length;
               i++
             ) {
-              request[toTranslate[0].translatable_fields[i]] =
+              og_translation[toTranslate[0].translatable_fields[i]] =
                 await this.translation(
                   googleTranslator,
                   request[toTranslate[0].translatable_fields[i]],
@@ -67,7 +67,7 @@ export class Translator {
                 );
             }
             let tableName = table_en + '_' + config.selected_languages[j];
-            await entityManager.getRepository(tableName).save(request);
+            await entityManager.getRepository(tableName).save(og_translation);
           }
         }
       } else {
@@ -86,7 +86,7 @@ export class Translator {
         }
 
         delete englishState.language_code;
-        await entityManager.getRepository(table_en).save(request);
+        await entityManager.getRepository(table_en).save(englishState);
 
         let tableName = table_en + '_' + language;
         await entityManager.getRepository(tableName).save(request);
@@ -102,7 +102,7 @@ export class Translator {
               i < toTranslate[0].translatable_fields.length;
               i++
             ) {
-              request[toTranslate[0].translatable_fields[i]] =
+              og_translation[toTranslate[0].translatable_fields[i]] =
                 await this.translation(
                   googleTranslator,
                   request[toTranslate[0].translatable_fields[i]],
@@ -110,7 +110,7 @@ export class Translator {
                 );
             }
             let tableName = table_en + '_' + config.selected_languages[j];
-            await entityManager.getRepository(tableName).save(request);
+            await entityManager.getRepository(tableName).save(og_translation);
           }
         }
       }
