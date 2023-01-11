@@ -74,6 +74,8 @@ export class Translator {
                 let language = request.language_code;
                 delete request.language_code;
 
+                console.log(language)
+
                 let englishState = request;
 
                 for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
