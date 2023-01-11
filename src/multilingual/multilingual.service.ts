@@ -38,10 +38,7 @@ export class Translator {
                     }
                     let tableName = table_en+config.selected_languages[j]
                     await entityManager.getRepository(tableName).save(request);
-
                 }
-
-               
             }
             
 
