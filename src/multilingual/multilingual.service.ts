@@ -91,9 +91,11 @@ export class Translator {
                 console.log(e)
 
                 let tableName = table_en + '_' + language;
+                console.log(tableName);
+                console.log(language)
                 let ar = await entityManager.getRepository(tableName).save(request);
                 console.log(ar)
-                
+
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     if (
                         config.selected_languages[j] == 'en' ||
