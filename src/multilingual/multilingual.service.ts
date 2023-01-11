@@ -32,18 +32,12 @@ export class Translator {
             for(let j= 0; j<config.selected_languages.length; j++){
                 if(config.selected_languages[j] == 'en'){}
                  else {
-                    console.log("inside request body translation")
                     for(let i=0 ; i < toTranslate[0].translatable_fields.length ;i++) {
                         request[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j])
                     }
-                    console.log(request)
-                    let tableName = table_en+config.selected_languages[j]
-                    console.log(tableName)
-                    try {
+                    let tableName = table_en+'_'+config.selected_languages[j]
                         await entityManager.getRepository(tableName).save(request);
-                    } catch (error) {
-                        console.log(error)
-                    }
+                   
                 }
             }
             
