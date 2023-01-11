@@ -38,10 +38,8 @@ export class Translator {
             ])
                 .getRawOne();
                 let og_translation = JSON.parse(JSON.stringify(request))
-                // console.log(request)
                 delete og_translation.language_code;
 
-            // console.log(request)
             if (request.language_code == 'en') {
                 delete request.language_code;
                 let response = await entityManager
@@ -86,7 +84,6 @@ export class Translator {
                         config.selected_languages[j] == language) {
                     }
                     else {
-                        console.log(config.selected_languages[j]+"--------------ELSE")
                         for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
                             og_translation[toTranslate[0].translatable_fields[i]] =
                                 await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
@@ -132,34 +129,53 @@ export class Translator {
                 'translation_services.service_name AS service_name',
             ])
                 .getRawOne();
+            let og_translation = JSON.parse(JSON.stringify(request));
+            delete og_translation.language_code;
+            for (let j = 0; j < config.selected_languages.length; j++) {
 
-                let og_translation = JSON.parse(JSON.stringify(request))
-                delete og_translation.language_code;
+               
+                let tableName = table_en + '_' + config.selected_languages[j];
+                if (config.selected_languages[j] == request.language_code) {
 
-                for (let j = 0; j < config.selected_languages.length; j++) {
-                    let tableName = table_en + '_' + request.language_code
-                    if(config.selected_languages[j] == request.language_code) {
-                        delete request.language_code
-                        await entityManager.getRepository(tableName).update({id : request.id, tenant_id: request.tenant_id, org_id : request.org_id},{...request})
+                    if(config.selected_languages[j] == 'en') {
+                        delete request.language_code;
+                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                    } else {
+                        delete request.language_code;
+                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                    }
+
+
+                }
+                else {
+
+                    if(config.selected_languages[j] == 'en') {
+                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
+                            og_translation[toTranslate[0].translatable_fields[i]] =
+                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
+                        }
+                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
                     } else {
                         for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
                             og_translation[toTranslate[0].translatable_fields[i]] =
                                 await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
                         }
-                        await entityManager.getRepository(tableName).update({id : request.id, tenant_id: request.tenant_id, org_id : request.org_id},{...og_translation})
-
+                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
                     }
-                    
+
                 }
+                
 
-                return { status : 'success' }
-
-        } catch (error) {
-            return { status:'error', message: error }
+                
+            }
+            return { status: 'success' };
+        }
+        catch (error) {
+            return { status: 'error', message: error };
         }
     }
 
-    
+
     async translation(
         googleTranslator: any,
         text: Array<string> | string,
