@@ -17,7 +17,7 @@ export class Translator {
            if(request.language_code == 'en') {
 
             delete request.language_code;
-
+            console.log(entityManager)
            let response = await entityManager.getRepository(table_en).save(request);
 
             let toTranslate = await entityManager.getRepository('table_metadata').find({ where :{ main_table_name : table_en }, select: { translatable_fields : true } })
