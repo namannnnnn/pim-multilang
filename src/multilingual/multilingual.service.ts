@@ -131,43 +131,56 @@ export class Translator {
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.language_code;
-            for (let j = 0; j < config.selected_languages.length; j++) {
+
+            let check = await this.checkTranslatable(request,table_en,entityManager,config);
+
+            if(check.check){
+                for (let j = 0; j < config.selected_languages.length; j++) {
 
                
-                let tableName = table_en + '_' + config.selected_languages[j];
-                if (config.selected_languages[j] == request.language_code) {
-
-                    if(config.selected_languages[j] == 'en') {
-                        delete request.language_code;
-                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
-                    } else {
-                        delete request.language_code;
-                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
-                    }
-
-
-                }
-                else {
-
-                    if(config.selected_languages[j] == 'en') {
-                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                            og_translation[toTranslate[0].translatable_fields[i]] =
-                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
+                    let tableName = table_en + '_' + config.selected_languages[j];
+                    if (config.selected_languages[j] == request.language_code) {
+    
+                        if(config.selected_languages[j] == 'en') {
+                            delete request.language_code;
+                            await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                        } else {
+                            delete request.language_code;
+                            await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
                         }
-                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
-                    } else {
-                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                            og_translation[toTranslate[0].translatable_fields[i]] =
-                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
-                        }
-                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
+    
+    
                     }
-
+                    else {
+    
+                        if(config.selected_languages[j] == 'en') {
+                            for (let i = 0; i < check.translatable_fields.length; i++) {
+                                og_translation[check.translatable_fields[i]] =
+                                    await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
+                            }
+                            await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
+                        } else {
+                            for (let i = 0; i < check.translatable_fields.length; i++) {
+                                og_translation[check.translatable_fields[i]] =
+                                    await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
+                            }
+                            await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
+                        }
+    
+                    }
+                    
+    
+                    
                 }
-                
+            } else {
+                for (let j = 0; j < config.selected_languages.length; j++) {
+                    
 
-                
+                    
+                }
             }
+
+            
             return { status: 'success' };
         }
         catch (error) {
@@ -187,6 +200,37 @@ export class Translator {
         );
         translations = Array.isArray(translations) ? translations : [translations];
         return translations[0];
+    }
+
+    async checkTranslatable (request : any, table_en : string, entityManager: EntityManager, config : any): Promise<any> {
+
+        try {
+            let table_name;
+            if(request.language_code == 'en'){
+                 table_name = table_en 
+
+            }   else {
+                 table_name = table_en + '_' + request.language_code
+
+            }
+            let oldRequest = await entityManager.getRepository(table_name).find({ where : { id : request.id, tenant_id : request.tenant_id, org_id:request.org_id } })
+            let check = false;
+            let translatable_fields = [];
+
+            for(let i=0;i<config.user_selected_languages.length;i++) {
+                if(request[config.user_selected_languages[i]] != oldRequest[config.user_selected_languages[i]]){
+                    check = true;
+                    translatable_fields.push(config.user_selected_languages[i])
+                }
+            }  
+            
+            return { check, translatable_fields }
+
+        } catch (error) {
+            console.log(error)
+        }
+
+
     }
 
     // translate by service
