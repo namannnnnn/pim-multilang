@@ -101,12 +101,7 @@ export class Translator {
         }
     }
 
-    async updateEntity (
-        request: any,
-        table_en: string,
-        entityManager: EntityManager,
-        googleTranslator: any,
-    ): Promise<any> {
+    async updateEntity(request, table_en, entityManager, googleTranslator) {
         try {
             let toTranslate = await entityManager
                 .getRepository('table_metadata')
@@ -131,56 +126,42 @@ export class Translator {
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.language_code;
-
-            let check = await this.checkTranslatable(request,table_en,entityManager,config);
-
-            if(check.check){
+            let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate);
+            if (!check.check) {
                 for (let j = 0; j < config.selected_languages.length; j++) {
-
-               
                     let tableName = table_en + '_' + config.selected_languages[j];
                     if (config.selected_languages[j] == request.language_code) {
-    
-                        if(config.selected_languages[j] == 'en') {
+                        if (config.selected_languages[j] == 'en') {
                             delete request.language_code;
                             await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
-                        } else {
+                        }
+                        else {
                             delete request.language_code;
                             await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
                         }
-    
-    
                     }
                     else {
-    
-                        if(config.selected_languages[j] == 'en') {
+                        if (config.selected_languages[j] == 'en') {
                             for (let i = 0; i < check.translatable_fields.length; i++) {
                                 og_translation[check.translatable_fields[i]] =
                                     await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
                             }
                             await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
-                        } else {
+                        }
+                        else {
                             for (let i = 0; i < check.translatable_fields.length; i++) {
                                 og_translation[check.translatable_fields[i]] =
                                     await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
                             }
                             await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
                         }
-    
                     }
-                    
-    
-                    
-                }
-            } else {
-                for (let j = 0; j < config.selected_languages.length; j++) {
-                    
-
-                    
                 }
             }
-
-            
+            else {
+                for (let j = 0; j < config.selected_languages.length; j++) {
+                }
+            }
             return { status: 'success' };
         }
         catch (error) {
@@ -188,6 +169,43 @@ export class Translator {
         }
     }
 
+    async deleteEntity( request, table_en, entityManager:EntityManager ) {
+        try {
+
+            let config = await entityManager
+                .getRepository('user_selected_languages')
+                .createQueryBuilder('user_selected_languages')
+                .leftJoinAndSelect('translation_services', 'translation_services', 'user_selected_languages.selected_service = translation_services.id')
+                .where('user_selected_languages.tenant_id =:tenantId', {
+                tenantId: request.tenant_id,
+            })
+                .andWhere('user_selected_languages.org_id =:orgaId', {
+                orgaId: request.org_id,
+            })
+                .select([
+                'user_selected_languages.selected_languages AS selected_languages',
+                'translation_services.service_name AS service_name',
+            ])
+                .getRawOne();
+
+            for(let i=0;i<config.user_selected_languages.length;i++) { 
+                if(config.user_selected_languages[i] == 'en') {
+                    await entityManager.getRepository(table_en).softDelete({ where : { id: request.id, tenant_id: request.tenant_id, org_id:request.org_id} })
+                } else {
+                    let tableName = table_en+'_'+config.user_selected_languages[i]
+                    await entityManager.getRepository(tableName).softDelete({ where : { id: request.id, tenant_id: request.tenant_id, org_id:request.org_id} })
+
+                }
+            }    
+
+            return { status:'success' }
+
+
+        } catch(error){
+            return { status: 'error', message: error };
+
+        }
+    }
 
     async translation(
         googleTranslator: any,
@@ -202,35 +220,29 @@ export class Translator {
         return translations[0];
     }
 
-    async checkTranslatable (request : any, table_en : string, entityManager: EntityManager, config : any): Promise<any> {
-
+    async checkTranslatable(request, table_en, entityManager, toTranslate) {
         try {
             let table_name;
-            if(request.language_code == 'en'){
-                 table_name = table_en 
-
-            }   else {
-                 table_name = table_en + '_' + request.language_code
-
+            if (request.language_code == 'en') {
+                table_name = table_en;
             }
-            let oldRequest = await entityManager.getRepository(table_name).find({ where : { id : request.id, tenant_id : request.tenant_id, org_id:request.org_id } })
+            else {
+                table_name = table_en + '_' + request.language_code;
+            }
+            let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
             let check = false;
             let translatable_fields = [];
-
-            for(let i=0;i<config.user_selected_languages.length;i++) {
-                if(request[config.user_selected_languages[i]] != oldRequest[config.user_selected_languages[i]]){
+            for (let i = 0; i < toTranslate.length; i++) {
+                if (request[toTranslate[i]] != oldRequest[toTranslate[i]]) {
                     check = true;
-                    translatable_fields.push(config.user_selected_languages[i])
+                    translatable_fields.push(toTranslate[i]);
                 }
-            }  
-            
-            return { check, translatable_fields }
-
-        } catch (error) {
-            console.log(error)
+            }
+            return { check, translatable_fields };
         }
-
-
+        catch (error) {
+            console.log(error);
+        }
     }
 
     // translate by service
