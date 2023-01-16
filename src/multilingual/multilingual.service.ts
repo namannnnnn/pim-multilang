@@ -207,6 +207,42 @@ export class Translator {
         }
     }
 
+    async pgTable ( request :any, table_en, entityManager:EntityManager ) {
+        try {
+
+            let config = await entityManager
+                .getRepository('user_selected_languages')
+                .createQueryBuilder('user_selected_languages')
+                .leftJoinAndSelect('translation_services', 'translation_services', 'user_selected_languages.selected_service = translation_services.id')
+                .where('user_selected_languages.tenant_id =:tenantId', {
+                tenantId: request.tenant_id,
+            })
+                .andWhere('user_selected_languages.org_id =:orgaId', {
+                orgaId: request.org_id,
+            })
+                .select([
+                'user_selected_languages.selected_languages AS selected_languages',
+                'translation_services.service_name AS service_name',
+            ])
+                .getRawOne();
+
+            for(let i=0;i<config.user_selected_languages.length;i++) {
+                if(config.user_selected_languages[i] == 'en'){
+                } else {
+                    let tableName = table_en + '_' + config.user_selected_languages[i];
+                    await entityManager.query(`CREATE TABLE ${tableName} (LIKE ${table_en} INCLUDING ALL)`)
+                }
+            }
+
+
+            return { status: 'success' };
+
+
+        } catch(error){
+            return { status: 'error', message: error };
+        }
+    }
+
     async translation(
         googleTranslator: any,
         text: Array<string> | string,
