@@ -38,10 +38,10 @@ export class Translator {
             ])
                 .getRawOne();
                 let og_translation = JSON.parse(JSON.stringify(request))
-                delete og_translation.language_code;
+                delete og_translation.lang_code;
 
-            if (request.language_code == 'en') {
-                delete request.language_code;
+            if (request.lang_code == 'en') {
+                delete request.lang_code;
                 let response = await entityManager
                     .getRepository(table_en)
                     .save(request);
@@ -62,8 +62,8 @@ export class Translator {
                 }
             }
             else {
-                let language = request.language_code;
-                delete request.language_code;
+                let language = request.lang_code;
+                delete request.lang_code;
 
                 let englishState = JSON.parse(JSON.stringify(request));
                 let defaultState = JSON.parse(JSON.stringify(request))
@@ -71,7 +71,7 @@ export class Translator {
                     englishState[toTranslate[0].translatable_fields[i]] =
                         await this.translation(googleTranslator, englishState[toTranslate[0].translatable_fields[i]], 'en');
                 }
-                delete englishState.language_code;
+                delete englishState.lang_code;
               
 
                 let e = await entityManager.getRepository(table_en).save(englishState);
@@ -125,18 +125,18 @@ export class Translator {
             ])
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
-            delete og_translation.language_code;
+            delete og_translation.lang_code;
             let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate);
             if (!check.check) {
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     let tableName = table_en + '_' + config.selected_languages[j];
-                    if (config.selected_languages[j] == request.language_code) {
+                    if (config.selected_languages[j] == request.lang_code) {
                         if (config.selected_languages[j] == 'en') {
-                            delete request.language_code;
+                            delete request.lang_code;
                             await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
                         }
                         else {
-                            delete request.language_code;
+                            delete request.lang_code;
                             await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
                         }
                     }
@@ -259,11 +259,11 @@ export class Translator {
     async checkTranslatable(request, table_en, entityManager, toTranslate) {
         try {
             let table_name;
-            if (request.language_code == 'en') {
+            if (request.lang_code == 'en') {
                 table_name = table_en;
             }
             else {
-                table_name = table_en + '_' + request.language_code;
+                table_name = table_en + '_' + request.lang_code;
             }
             let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
             let check = false;
