@@ -91,7 +91,7 @@ export class Translator {
                         }
                         let tableName = table_en + '_' + config.selected_languages[j];
                         og_translation.id = id;
-                        let idd =await entityManager.getRepository(tableName).save(og_translation);
+                        let iddd =await entityManager.getRepository(tableName).save(og_translation);
                     }
                 }
             }
