@@ -16,6 +16,7 @@ export class Translator {
         googleTranslator: any,
     ): Promise<any> {
         try {
+            let data;
             let toTranslate = await entityManager
                 .getRepository('table_metadata')
                 .find({
@@ -42,7 +43,7 @@ export class Translator {
 
             if (request.lang_code == 'en') {
                 delete request.lang_code;
-                let response = await entityManager
+                 data = await entityManager
                     .getRepository(table_en)
                     .save(request);
 
@@ -78,7 +79,7 @@ export class Translator {
                 let id = e.id
                 let tableNameDefualt = table_en + '_' + language;
                 defaultState.id = id;
-                let ar = await entityManager.getRepository(tableNameDefualt).save(defaultState);
+                data = await entityManager.getRepository(tableNameDefualt).save(defaultState);
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     if (config.selected_languages[j] == 'en' ||
                         config.selected_languages[j] == language) {
@@ -94,7 +95,7 @@ export class Translator {
                     }
                 }
             }
-            return { status : 'success' }
+            return { status : 'success', response: data }
         }
         catch (error) {
             return { status:'error', message: error }
