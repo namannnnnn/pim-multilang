@@ -127,8 +127,10 @@ export class Translator {
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
-            let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate);
-            if (!check.check) {
+            console.log(toTranslate)
+            let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate[0]);
+            console.log(check)
+            if (check.check) {
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     let tableName = table_en + '_' + config.selected_languages[j];
                     if (config.selected_languages[j] == request.lang_code) {
@@ -161,6 +163,15 @@ export class Translator {
             }
             else {
                 for (let j = 0; j < config.selected_languages.length; j++) {
+                    let tableName = table_en + '_' + config.selected_languages[j];
+                    if (config.selected_languages[j] == 'en') {
+                        delete request.lang_code;
+                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                    }
+                    else {
+                        delete request.lang_code;
+                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                    }
                 }
             }
             return { status: 'success' };
@@ -269,10 +280,12 @@ export class Translator {
             let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
             let check = false;
             let translatable_fields = [];
-            for (let i = 0; i < toTranslate.length; i++) {
-                if (request[toTranslate[i]] != oldRequest[toTranslate[i]]) {
+            console.log(toTranslate.translatable_fields)
+            for (let i = 0; i < toTranslate.translatable_fields.length; i++) {
+
+                if (request[toTranslate.translatable_fields[i]] != oldRequest[toTranslate.translatable_fields[i]]) {
                     check = true;
-                    translatable_fields.push(toTranslate[i]);
+                    translatable_fields.push(toTranslate.translatable_fields[i]);
                 }
             }
             return { check, translatable_fields };
