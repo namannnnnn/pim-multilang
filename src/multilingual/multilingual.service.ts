@@ -127,9 +127,7 @@ export class Translator {
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
-            console.log(toTranslate)
             let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate[0]);
-            console.log(check)
             if (check.check) {
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     let tableName = table_en + '_' + config.selected_languages[j];
@@ -280,7 +278,6 @@ export class Translator {
             let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
             let check = false;
             let translatable_fields = [];
-            console.log(toTranslate.translatable_fields)
             for (let i = 0; i < toTranslate.translatable_fields.length; i++) {
 
                 if (request[toTranslate.translatable_fields[i]] != oldRequest[toTranslate.translatable_fields[i]]) {
