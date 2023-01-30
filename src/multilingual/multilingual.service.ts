@@ -198,11 +198,11 @@ export class Translator {
             ])
                 .getRawOne();
 
-            for(let i=0;i<config.user_selected_languages.length;i++) { 
-                if(config.user_selected_languages[i] == 'en') {
+            for(let i=0;i<config.selected_languages.length;i++) { 
+                if(config.selected_languages[i] == 'en') {
                     await entityManager.getRepository(table_en).softDelete({ where : { id: request.id, tenant_id: request.tenant_id, org_id:request.org_id} })
                 } else {
-                    let tableName = table_en+'_'+config.user_selected_languages[i]
+                    let tableName = table_en+'_'+config.selected_languages[i]
                     await entityManager.getRepository(tableName).softDelete({ where : { id: request.id, tenant_id: request.tenant_id, org_id:request.org_id} })
 
                 }
