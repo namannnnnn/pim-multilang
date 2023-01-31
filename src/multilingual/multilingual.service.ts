@@ -4,7 +4,7 @@ import { v2 } from '@google-cloud/translate';
 import { Inject } from '@nestjs/common';
 import { response } from 'express';
 const { Translate } = v2;
-import { EntityManager } from 'typeorm';
+import { EntityManager, QueryRunner } from 'typeorm';
 
 export class Translator {
     constructor() { }
@@ -207,6 +207,7 @@ export class Translator {
         entityManager: EntityManager,
         googleTranslator: any,
         use_raw ?: boolean,
+        queryRunner ?: QueryRunner
 
     ): Promise<any> {
         try {
@@ -289,9 +290,9 @@ export class Translator {
         else{
             if (request.lang_code == 'en') {
                 delete request.lang_code;
-                let response = await entityManager
-                    .getRepository(table_en)
-                    .save(request);
+                data = await queryRunner.connection.createQueryBuilder().insert().into(table_en).values(request).execute();
+
+                // let response = await entityManager.getRepository(table_en).save(request);
                     for (let j = 0; j < config.selected_languages.length; j++) {
                     if (config.selected_languages[j] == 'en') {
                     }
@@ -304,7 +305,8 @@ export class Translator {
                         }
                         let tableName = table_en + '_' + config.selected_languages[j];
                         og_translation[toTranslate[0].id_column_name] = request[toTranslate[0].id_column_name]
-                        await entityManager.getRepository(tableName).save(og_translation);
+                        await queryRunner.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
+                        // await entityManager.getRepository(tableName).save(og_translation);
                     }
                 }
             }
@@ -320,11 +322,15 @@ export class Translator {
                     }
                 }
                 delete englishState.lang_code;
-                let e = await entityManager.getRepository(table_en).save(englishState);
+                let e = await queryRunner.connection.createQueryBuilder().insert().into(table_en).values(englishState).execute();
+
+                // let e = await entityManager.getRepository(table_en).save(englishState);
                 let id = e[toTranslate[0].id_column_name]
                 let tableNameDefualt = table_en + '_' + language;
                 defaultState[toTranslate[0].id_column_name] = id;
-                let ar = await entityManager.getRepository(tableNameDefualt).save(defaultState);
+                data = await queryRunner.connection.createQueryBuilder().insert().into(tableNameDefualt).values(defaultState).execute();
+
+                // let ar = await entityManager.getRepository(tableNameDefualt).save(defaultState);
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     if (config.selected_languages[j] == 'en' ||
                         config.selected_languages[j] == language) {
@@ -338,11 +344,13 @@ export class Translator {
                         }
                         let tableName = table_en + '_' + config.selected_languages[j];
                         og_translation[toTranslate[0].id_column_name] = id;
-                        let idd =await entityManager.getRepository(tableName).save(og_translation);
+                        let idd = await queryRunner.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
+
+                        // let idd =await entityManager.getRepository(tableName).save(og_translation);
                     }
                 }
             }
-            return { status : 'success' }
+            return { status : 'success', response : data }
         }
         }
         catch (error) {
