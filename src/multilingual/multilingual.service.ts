@@ -9,98 +9,7 @@ import { EntityManager } from 'typeorm';
 export class Translator {
     constructor() { }
 
-    async createEntity(
-        request: any,
-        table_en: string,
-        entityManager: EntityManager,
-        googleTranslator: any,
-    ): Promise<any> {
-        try {
-            let data;
-            let toTranslate = await entityManager
-                .getRepository('table_metadata')
-                .find({
-                where: { main_table_name: table_en },
-                select: { translatable_fields: true },
-            });
-            let config = await entityManager
-                .getRepository('user_selected_languages')
-                .createQueryBuilder('user_selected_languages')
-                .leftJoinAndSelect('translation_services', 'translation_services', 'user_selected_languages.selected_service = translation_services.id')
-                .where('user_selected_languages.tenant_id =:tenantId', {
-                tenantId: request.tenant_id,
-            })
-                .andWhere('user_selected_languages.org_id =:orgaId', {
-                orgaId: request.org_id,
-            })
-                .select([
-                'user_selected_languages.selected_languages AS selected_languages',
-                'translation_services.service_name AS service_name',
-            ])
-                .getRawOne();
-                let og_translation = JSON.parse(JSON.stringify(request))
-                delete og_translation.lang_code;
-
-            if (request.lang_code == 'en') {
-                delete request.lang_code;
-                 data = await entityManager
-                    .getRepository(table_en)
-                    .save(request);
-
-
-                    for (let j = 0; j < config.selected_languages.length; j++) {
-                    if (config.selected_languages[j] == 'en') {
-                    }
-                    else {
-                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                            og_translation[toTranslate[0].translatable_fields[i]] =
-                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
-                        }
-                        let tableName = table_en + '_' + config.selected_languages[j];
-                        og_translation.id = request.id
-                        await entityManager.getRepository(tableName).save(og_translation);
-                    }
-                }
-            }
-            else {
-                let language = request.lang_code;
-                delete request.lang_code;
-
-                let englishState = JSON.parse(JSON.stringify(request));
-                let defaultState = JSON.parse(JSON.stringify(request))
-                for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                    englishState[toTranslate[0].translatable_fields[i]] =
-                        await this.translation(googleTranslator, englishState[toTranslate[0].translatable_fields[i]], 'en');
-                }
-                delete englishState.lang_code;
-              
-
-                let e = await entityManager.getRepository(table_en).save(englishState);
-                let id = e.id
-                let tableNameDefualt = table_en + '_' + language;
-                defaultState.id = id;
-                data = await entityManager.getRepository(tableNameDefualt).save(defaultState);
-                for (let j = 0; j < config.selected_languages.length; j++) {
-                    if (config.selected_languages[j] == 'en' ||
-                        config.selected_languages[j] == language) {
-                    }
-                    else {
-                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                            og_translation[toTranslate[0].translatable_fields[i]] =
-                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
-                        }
-                        let tableName = table_en + '_' + config.selected_languages[j];
-                        og_translation.id = id;
-                        let iddd =await entityManager.getRepository(tableName).save(og_translation);
-                    }
-                }
-            }
-            return { status : 'success', response: data }
-        }
-        catch (error) {
-            return { status:'error', message: error }
-        }
-    }
+    
 
     async updateEntity(request, table_en, entityManager, googleTranslator) {
         try {
@@ -292,7 +201,154 @@ export class Translator {
         }
     }
 
-    // translate by service
+    async createEntity(
+        request: any,
+        table_en: string,
+        entityManager: EntityManager,
+        googleTranslator: any,
+        use_raw ?: boolean,
 
-    //
+    ): Promise<any> {
+        try {
+            let data;
+            let toTranslate = await entityManager
+                .getRepository('table_metadata')
+                .find({
+                where: { main_table_name: table_en },
+                select: { translatable_fields: true, id_column_name: true},
+            });
+            let config = await entityManager
+                .getRepository('user_selected_languages')
+                .createQueryBuilder('user_selected_languages')
+                .leftJoinAndSelect('translation_services', 'translation_services', 'user_selected_languages.selected_service = translation_services.id')
+                .where('user_selected_languages.tenant_id =:tenantId', {
+                tenantId: request.tenant_id,
+            })
+                .andWhere('user_selected_languages.org_id =:orgaId', {
+                orgaId: request.org_id,
+            })
+                .select([
+                'user_selected_languages.selected_languages AS selected_languages',
+                'translation_services.service_name AS service_name',
+            ])
+                .getRawOne();
+                let og_translation = JSON.parse(JSON.stringify(request))
+                delete og_translation.lang_code;
+            if (!use_raw){
+            if (request.lang_code == 'en') {
+                delete request.lang_code;
+                 data = await entityManager
+                    .getRepository(table_en)
+                    .save(request);
+                    for (let j = 0; j < config.selected_languages.length; j++) {
+                    if (config.selected_languages[j] == 'en') {
+                    }
+                    else {
+                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
+                            og_translation[toTranslate[0].translatable_fields[i]] =
+                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
+                        }
+                        let tableName = table_en + '_' + config.selected_languages[j];
+                        og_translation[toTranslate[0].id_column_name] = request[toTranslate[0].id_column_name]
+                        await entityManager.getRepository(tableName).save(og_translation);
+                    }
+                }
+            }
+            else {
+                let language = request.lang_code;
+                delete request.lang_code;
+                let englishState = JSON.parse(JSON.stringify(request));
+                let defaultState = JSON.parse(JSON.stringify(request))
+                for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
+                    englishState[toTranslate[0].translatable_fields[i]] =
+                        await this.translation(googleTranslator, englishState[toTranslate[0].translatable_fields[i]], 'en');
+                }
+                delete englishState.lang_code;
+                let e = await entityManager.getRepository(table_en).save(englishState);
+                let id = e[toTranslate[0].id_column_name]
+                let tableNameDefualt = table_en + '_' + language;
+                defaultState[toTranslate[0].id_column_name] = id;
+                data = await entityManager.getRepository(tableNameDefualt).save(defaultState);
+                for (let j = 0; j < config.selected_languages.length; j++) {
+                    if (config.selected_languages[j] == 'en' ||
+                        config.selected_languages[j] == language) {
+                    }
+                    else {
+                        for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
+                            og_translation[toTranslate[0].translatable_fields[i]] =
+                                await this.translation(googleTranslator, request[toTranslate[0].translatable_fields[i]], config.selected_languages[j]);
+                        }
+                        let tableName = table_en + '_' + config.selected_languages[j];
+                        og_translation[toTranslate[0].id_column_name] = id;
+                        let idd =await entityManager.getRepository(tableName).save(og_translation);
+                    }
+                }
+            }
+            return { status : 'success', response : data }
+        }
+        else{
+            if (request.lang_code == 'en') {
+                delete request.lang_code;
+                let response = await entityManager
+                    .getRepository(table_en)
+                    .save(request);
+                    for (let j = 0; j < config.selected_languages.length; j++) {
+                    if (config.selected_languages[j] == 'en') {
+                    }
+                    else {
+                        let keys = Object.keys(request)
+                        for (let k = 0; k <keys.length; k++) {
+                            if (!((toTranslate[0].translatable_fields).includes(keys[k]))){
+                                og_translation[keys[k]]=await this.translation(googleTranslator, request[keys[k]], config.selected_languages[j]);
+                            }
+                        }
+                        let tableName = table_en + '_' + config.selected_languages[j];
+                        og_translation[toTranslate[0].id_column_name] = request[toTranslate[0].id_column_name]
+                        await entityManager.getRepository(tableName).save(og_translation);
+                    }
+                }
+            }
+            else {
+                let language = request.lang_code;
+                delete request.lang_code;
+                let englishState = JSON.parse(JSON.stringify(request));
+                let defaultState = JSON.parse(JSON.stringify(request))
+                let keys = Object.keys(request)
+                for (let k = 0; k <keys.length; k++) {
+                    if (!((toTranslate[0].translatable_fields).includes(keys[k]))){
+                        englishState[keys[k]]=await this.translation(googleTranslator, englishState[keys[k]], 'en');
+                    }
+                }
+                delete englishState.lang_code;
+                let e = await entityManager.getRepository(table_en).save(englishState);
+                let id = e[toTranslate[0].id_column_name]
+                let tableNameDefualt = table_en + '_' + language;
+                defaultState[toTranslate[0].id_column_name] = id;
+                let ar = await entityManager.getRepository(tableNameDefualt).save(defaultState);
+                for (let j = 0; j < config.selected_languages.length; j++) {
+                    if (config.selected_languages[j] == 'en' ||
+                        config.selected_languages[j] == language) {
+                    }
+                    else {
+                        let keys = Object.keys(request)
+                        for (let k = 0; k <keys.length; k++) {
+                            if (!((toTranslate[0].translatable_fields).includes(keys[k]))){
+                                og_translation[keys[k]]=await this.translation(googleTranslator, request[keys[k]], config.selected_languages[j]);
+                            }
+                        }
+                        let tableName = table_en + '_' + config.selected_languages[j];
+                        og_translation[toTranslate[0].id_column_name] = id;
+                        let idd =await entityManager.getRepository(tableName).save(og_translation);
+                    }
+                }
+            }
+            return { status : 'success' }
+        }
+        }
+        catch (error) {
+            return { status:'error', message: error }
+        }
+    }
+
+    
 }
