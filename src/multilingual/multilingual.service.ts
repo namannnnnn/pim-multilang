@@ -207,7 +207,6 @@ export class Translator {
         entityManager: EntityManager,
         googleTranslator: any,
         use_raw ?: boolean,
-        queryRunner ?: QueryRunner
 
     ): Promise<any> {
         try {
@@ -290,7 +289,7 @@ export class Translator {
         else{
             if (request.lang_code == 'en') {
                 delete request.lang_code;
-                data = await queryRunner.connection.createQueryBuilder().insert().into(table_en).values(request).execute();
+                data = await entityManager.connection.createQueryBuilder().insert().into(table_en).values(request).execute();
 
                 // let response = await entityManager.getRepository(table_en).save(request);
                     for (let j = 0; j < config.selected_languages.length; j++) {
@@ -305,7 +304,7 @@ export class Translator {
                         }
                         let tableName = table_en + '_' + config.selected_languages[j];
                         og_translation[toTranslate[0].id_column_name] = request[toTranslate[0].id_column_name]
-                        await queryRunner.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
+                        await entityManager.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
                         // await entityManager.getRepository(tableName).save(og_translation);
                     }
                 }
@@ -322,13 +321,13 @@ export class Translator {
                     }
                 }
                 delete englishState.lang_code;
-                let e = await queryRunner.connection.createQueryBuilder().insert().into(table_en).values(englishState).execute();
+                let e = await entityManager.connection.createQueryBuilder().insert().into(table_en).values(englishState).execute();
 
                 // let e = await entityManager.getRepository(table_en).save(englishState);
                 let id = e[toTranslate[0].id_column_name]
                 let tableNameDefualt = table_en + '_' + language;
                 defaultState[toTranslate[0].id_column_name] = id;
-                data = await queryRunner.connection.createQueryBuilder().insert().into(tableNameDefualt).values(defaultState).execute();
+                data = await entityManager.connection.createQueryBuilder().insert().into(tableNameDefualt).values(defaultState).execute();
 
                 // let ar = await entityManager.getRepository(tableNameDefualt).save(defaultState);
                 for (let j = 0; j < config.selected_languages.length; j++) {
@@ -344,7 +343,7 @@ export class Translator {
                         }
                         let tableName = table_en + '_' + config.selected_languages[j];
                         og_translation[toTranslate[0].id_column_name] = id;
-                        let idd = await queryRunner.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
+                        let idd = await entityManager.connection.createQueryBuilder().insert().into(tableName).values(og_translation).execute();
 
                         // let idd =await entityManager.getRepository(tableName).save(og_translation);
                     }
