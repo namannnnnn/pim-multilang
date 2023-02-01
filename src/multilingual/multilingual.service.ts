@@ -145,10 +145,10 @@ export class Translator {
             ])
                 .getRawOne();
 
-            for(let i=0;i<config.user_selected_languages.length;i++) {
-                if(config.user_selected_languages[i] == 'en'){
+            for(let i=0;i<config.selected_languages.length;i++) {
+                if(config.selected_languages[i] == 'en'){
                 } else {
-                    let tableName = table_en + '_' + config.user_selected_languages[i];
+                    let tableName = table_en + '_' + config.selected_languages[i];
                     await entityManager.query(`CREATE TABLE ${tableName} (LIKE ${table_en} INCLUDING ALL)`)
                 }
             }
