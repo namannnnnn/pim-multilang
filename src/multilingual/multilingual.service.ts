@@ -357,5 +357,16 @@ export class Translator {
         }
     }
 
+    async createDocument ( model : any, request : any) {
+
+        try {
+
+            let req = new model(request);
+            await req.save();
+        } catch(error){
+            console.log(error)
+        }
+    }
+
     
 }
