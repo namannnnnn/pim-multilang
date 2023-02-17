@@ -1,6 +1,7 @@
 /* eslint-disable */
 
 import { v2 } from '@google-cloud/translate';
+import { google } from '@google-cloud/translate/build/protos/protos';
 import { Inject } from '@nestjs/common';
 import { response } from 'express';
 const { Translate } = v2;
@@ -378,6 +379,17 @@ export class Translator {
                         (og_translation.translations)[config[0].selected_languages[i]] = ((request.translations).en)
                         for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
                             if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3' || toTranslate[0].translatable_fields[j] == 'setValue') {
+                                switch(toTranslate[0].translatable_fields[j]){
+                                    case 'conditions_2':
+                                        og_translation.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;
+                                    case 'conditions_3':
+                                        // og_translation.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;   
+                                    case 'setValue':
+                                        og_translation.translations[config[0].selected_languages[i]].setValue = await this.processSetValues(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;    
+                                }
                             }
                             else {
                                 (og_translation.translations[config[0].selected_languages[i]])[toTranslate[0].translatable_fields[j]] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
@@ -397,6 +409,17 @@ export class Translator {
                 let defaultState = JSON.parse(JSON.stringify(request));
                 for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
                     if (toTranslate[0].translatable_fields[i] == 'conditions_2' || toTranslate[0].translatable_fields[i] == 'conditions_3'|| toTranslate[0].translatable_fields[i] == 'setValue') {
+                        switch(toTranslate[0].translatable_fields[i]){
+                            case 'conditions_2':
+                                englishState.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(englishState.translations[config[0].selected_languages[i]], googleTranslator);
+                                break;
+                            case 'conditions_3':
+                                // englishState.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(englishState.translations[config[0].selected_languages[i]], googleTranslator);
+                                break;   
+                            case 'setValue':
+                                englishState.translations[config[0].selected_languages[i]].setValue = await this.processSetValues(englishState.translations[config[0].selected_languages[i]], googleTranslator);
+                                break;    
+                        }
                     }
                     else {
                         englishState[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, (englishState.translations[language])[toTranslate[0].translatable_fields[i]], 'en');
@@ -411,6 +434,17 @@ export class Translator {
                     else {
                         for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
                             if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3' || toTranslate[0].translatable_fields[j] == 'setValue') {
+                                switch(toTranslate[0].translatable_fields[j]){
+                                    case 'conditions_2':
+                                        og_translation.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;
+                                    case 'conditions_3':
+                                        // og_translation.translations[config[0].selected_languages[i]].conditions = await this.prcocessConditions(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;   
+                                    case 'setValue':
+                                        og_translation.translations[config[0].selected_languages[i]].setValue = await this.processSetValues(og_translation.translations[config[0].selected_languages[i]], googleTranslator);
+                                        break;    
+                                }
                             }
                             else {
                                 og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
@@ -428,6 +462,210 @@ export class Translator {
             console.log(error)
         }
     }
+
+    async prcocessConditions ( rule : any, googleTranslator : any)  {
+        try {
+            if(rule.conditions.any){
+                for( let i = 0; i < rule.conditions.any.length; i++ ){
+                    if(rule.conditions.any[i].all){
+                        for( let j =0; j < rule.conditions.any[i].all.length; j++ ){
+                            if((rule.conditions.any[i].all[j]).conditionalAttributeName == ""){ 
+                                if((rule.conditions.any[i].all[j]).value[1] ==0 && (rule.conditions.any[i].all[j]).value[2]==0){
+                                    if( ((rule.conditions.any[i].all[j]).attributeType) == 'int' || (rule.conditions.any[i].all[j]).attributeType == 'float'|| (rule.conditions.any[i].all[j]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].all[j]).value[0] = await this.translation(googleTranslator,(rule.conditions.any[i].all[j]).value[0], 'en')
+                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].all[j]).attributeType) == 'int' || (rule.conditions.any[i].all[j]).attributeType == 'float'|| (rule.conditions.any[i].all[j]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].all[j]).value = await this.translation(googleTranslator,(rule.conditions.any[i].all[j]).value, 'en')
+                                    }
+                                }
+                            } else { 
+                                if((rule.conditions.any[i].all[j]).value[1] ==0 && (rule.conditions.any[i].all[j]).value[2]==0){
+                                    if( ((rule.conditions.any[i].all[j]).conditionalAttributeType) == 'int' || (rule.conditions.any[i].all[j]).conditionalAttributeType == 'float'|| (rule.conditions.any[i].all[j]).conditionalAttributeType == 'int'  ) {
+                                    }else {
+                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].all[j]).attributeType) == 'int' || (rule.conditions.any[i].all[j]).attributeType == 'float'|| (rule.conditions.any[i].all[j]).attributeType == 'int'  ) {
+                                    }else {
+                                    }
+                                }
+                            }
+                                // await this.dependentAttributeRepository.save({ "attributeId" : rule.conditions.any[i].all[j].attributeId, "categoryId" : rule.categoryId, "ruleId" : rule.ruleCode, "ruleType" :rule.ruleType })
+    
+    
+                        }
+                    }
+                    if(rule.conditions.any[i].any){
+                        for ( let k =0; k < rule.conditions.any[i].any.length; k++){
+                            if((rule.conditions.any[i].any[k]).conditionalAttributeName == ""){ 
+                                if((rule.conditions.any[i].any[k]).value[1] ==0 && (rule.conditions.any[i].any[k]).value[2]==0){
+                                    if( ((rule.conditions.any[i].any[k]).attributeType) == 'int' || (rule.conditions.any[i].any[k]).attributeType == 'float'|| (rule.conditions.any[i].any[k]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].any[k]).value[0] =  await this.translation(googleTranslator,(rule.conditions.any[i].any[k]).value[0], 'en')
+                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].any[k]).attributeType) == 'int' || (rule.conditions.any[i].any[k]).attributeType == 'float'|| (rule.conditions.any[i].any[k]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].any[k]).value =  await this.translation(googleTranslator,(rule.conditions.any[i].any[k]).value, 'en')
+                                    }
+                                }
+                            } else { 
+                                if((rule.conditions.any[i].any[k]).value[1] ==0 && (rule.conditions.any[i].any[k]).value[2]==0){
+                                    if( ((rule.conditions.any[i].any[k]).conditionalAttributeType) == 'int' || (rule.conditions.any[i].any[k]).conditionalAttributeType == 'float'|| (rule.conditions.any[i].any[k]).conditionalAttributeType == 'int'  ) {
+                                    }else {
+                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].any[k]).attributeType) == 'int' || (rule.conditions.any[i].any[k]).attributeType == 'float'|| (rule.conditions.any[i].any[k]).attributeType == 'int'  ) {
+                                    }else {
+                                    }
+                                }
+                            }
+                            
+                        }
+                    }
+                    if(rule.conditions.any[i].internal){
+                        for ( let l =0; l < rule.conditions.any[i].internal.length; l++){
+                            if((rule.conditions.any[i].internal[l]).conditionalAttributeName == ""){ 
+                                if((rule.conditions.any[i].internal[l]).value[1] ==0 && (rule.conditions.any[i].internal[l]).value[2]==0){
+                                    if( ((rule.conditions.any[i].internal[l]).attributeType) == 'int' || (rule.conditions.any[i].internal[l]).attributeType == 'float'|| (rule.conditions.any[i].internal[l]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].internal[l]).value[0] = await this.translation(googleTranslator,(rule.conditions.any[i].internal[l]).value[0], 'en')
+                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].internal[l]).attributeType) == 'int' || (rule.conditions.any[i].internal[l]).attributeType == 'float'|| (rule.conditions.any[i].internal[l]).attributeType == 'int'  ) {
+                                    }else {
+                                        (rule.conditions.any[i].internal[l]).value = await this.translation(googleTranslator,(rule.conditions.any[i].internal[l]).value, 'en')
+                                    }
+                                }
+                            } else { 
+                                if((rule.conditions.any[i].internal[l]).value[1] ==0 && (rule.conditions.any[i].internal[l]).value[2]==0){
+                                    if( ((rule.conditions.any[i].internal[l]).conditionalAttributeType) == 'int' || (rule.conditions.any[i].internal[l]).conditionalAttributeType == 'float'|| (rule.conditions.any[i].internal[l]).conditionalAttributeType == 'int'  ) {
+                                    }else {                                    }
+                                } else {
+                                    if( ((rule.conditions.any[i].internal[l]).attributeType) == 'int' || (rule.conditions.any[i].internal[l]).attributeType == 'float'|| (rule.conditions.any[i].internal[l]).attributeType == 'int'  ) {
+                                    }else {
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                if(rule.conditions.all) {
+                    for( let i = 0; i < rule.conditions.all.length; i++ ){
+                        if(rule.conditions.all[i].all){
+                            for( let j =0; j < rule.conditions.all[i].all.length ; j++ ){
+                                if((rule.conditions.all[i].all[j]).conditionalAttributeName == ""){ 
+    
+                                    if((rule.conditions.all[i].all[j]).value[1] ==0 && (rule.conditions.all[i].all[j]).value[2]==0){
+                                        if( ((rule.conditions.all[i].all[j]).attributeType) == 'int' || (rule.conditions.all[i].all[j]).attributeType == 'float'|| (rule.conditions.all[i].all[j]).attributeType == 'int'  ) {
+                                        }else {
+                                            (rule.conditions.all[i].all[j]).value[0] = await this.translation(googleTranslator,(rule.conditions.all[i].all[j]).value[0], 'en')                                        }
+                                    } else {
+                                        if( ((rule.conditions.all[i].all[j]).attributeType) == 'int' || (rule.conditions.all[i].all[j]).attributeType == 'float'|| (rule.conditions.all[i].all[j]).attributeType == 'int'  ) {
+                                        }
+                                        else {
+                                            (rule.conditions.all[i].all[j]).value = await this.translation(googleTranslator,(rule.conditions.all[i].all[j]).value, 'en')                                        
+                                        }
+                                    }
+                                } else { 
+                                    if((rule.conditions.all[i].all[j]).value[1] ==0 && (rule.conditions.all[i].all[j]).value[2]==0){
+                                        if( ((rule.conditions.all[i].all[j]).conditionalAttributeType) == 'int' || (rule.conditions.all[i].all[j]).conditionalAttributeType == 'float'|| (rule.conditions.all[i].all[j]).conditionalAttributeType == 'int'  ) {                                        }else {                                        }
+                                    } else {
+                                        if( ((rule.conditions.all[i].all[j]).attributeType) == 'int' || (rule.conditions.all[i].all[j]).attributeType == 'float'|| (rule.conditions.all[i].all[j]).attributeType == 'int'  ) {
+                                        }else {
+                                        }
+                                    }
+                                }                                
+                            }
+                        }
+                        if(rule.conditions.all[i].any){
+                            for ( let k =0; k < rule.conditions.all[i].any.length ; k++){
+                                if((rule.conditions.all[i].any[k]).conditionalAttributeName == ""){ 
+                                    if((rule.conditions.all[i].any[k]).value[1] ==0 && (rule.conditions.all[i].any[k]).value[2]==0){
+                                        if( ((rule.conditions.all[i].any[k]).attributeType) == 'int' || (rule.conditions.all[i].any[k]).attributeType == 'float'|| (rule.conditions.all[i].any[k]).attributeType == 'int'  ) {
+                                        }else {
+                                            (rule.conditions.all[i].any[k]).value[0] = await this.translation(googleTranslator,(rule.conditions.all[i].any[k]).value[0], 'en')                                        
+                                        
+                                        }
+                                    } else {
+                                        if( ((rule.conditions.all[i].any[k]).attributeType) == 'int' || (rule.conditions.all[i].any[k]).attributeType == 'float'|| (rule.conditions.all[i].any[k]).attributeType == 'int'  ) {
+                                        }else {
+                                            (rule.conditions.all[i].any[k]).value = await this.translation(googleTranslator,(rule.conditions.all[i].any[k]).value, 'en')                                        
+                                        }
+                                    }
+                                } else { 
+                                    if((rule.conditions.all[i].any[k]).value[1] ==0 && (rule.conditions.all[i].any[k]).value[2]==0){
+                                        if( ((rule.conditions.all[i].any[k]).conditionalAttributeType) == 'int' || (rule.conditions.all[i].any[k]).conditionalAttributeType == 'float'|| (rule.conditions.all[i].any[k]).conditionalAttributeType == 'int'  ) {
+                                        }else {
+                                        }
+                                    } else {
+                                        if( ((rule.conditions.all[i].any[k]).attributeType) == 'int' || (rule.conditions.all[i].any[k]).attributeType == 'float'|| (rule.conditions.all[i].any[k]).attributeType == 'int'  ) {
+                                        }else {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if(rule.conditions.all[i].internal){
+                            for ( let l =0; l < rule.conditions.all[i].internal.length; l++){
+
+                            if((rule.conditions.all[i].internal[l]).conditionalAttributeName == ""){ 
+    
+                                if((rule.conditions.all[i].internal[l]).value[1] ==0 && (rule.conditions.all[i].internal[l]).value[2]==0){
+                                    if( ((rule.conditions.all[i].internal[l]).attributeType) == 'int' || (rule.conditions.all[i].internal[l]).attributeType == 'float'|| (rule.conditions.all[i].internal[l]).attributeType == 'int'  ) {
+                                    }else {
+                                       (rule.conditions.all[i].internal[l]).value[0] = await this.translation(googleTranslator, (rule.conditions.all[i].internal[l]).value[0],'en');
+                                    }
+                                } else {
+                                    if( ((rule.conditions.all[i].internal[l]).attributeType) == 'int' || (rule.conditions.all[i].internal[l]).attributeType == 'float'|| (rule.conditions.all[i].internal[l]).attributeType == 'int'  ) {
+                                     
+                                    }else {
+                                        (rule.conditions.all[i].internal[l]).value=await this.translation(googleTranslator,(rule.conditions.all[i].internal[l]).value, 'en')                                        ;
+                                    }
+                                }
+                            } else { 
+                                if((rule.conditions.all[i].internal[l]).value[1] ==0 && (rule.conditions.all[i].internal[l]).value[2]==0){
+                                    if( ((rule.conditions.all[i].internal[l]).conditionalAttributeType) == 'int' || (rule.conditions.all[i].internal[l]).conditionalAttributeType == 'float'|| (rule.conditions.all[i].internal[l]).conditionalAttributeType == 'int'  ) {
+                                    }else {
+                                        
+                                    }
+                                } else {
+                                    if( ((rule.conditions.all[i].internal[l]).attributeType) == 'int' || (rule.conditions.all[i].internal[l]).attributeType == 'float'|| (rule.conditions.all[i].internal[l]).attributeType == 'int'  ) {
+                                  
+                                    }else {
+                                    }
+                                }
+                            }
+                          }
+                        }
+                    }
+            }
+    
+            
+        }
+
+        return rule.conditions;
+        } catch(error){
+            console.log(error)
+        }
+    }
+
+    async processSetValues ( rule : any, googleTranslator : any ) {
+        try {
+            for(let i=0;i<rule.setValue.length;i++){
+                if(rule.setValue.attributeType == 'varchar') {
+                    rule.setValue.value = await this.translation(googleTranslator, rule.setValue.value, 'en')
+                }
+            }
+        } catch(error) {
+            console.log(error)
+        }
+    }
+
 
     
 }
