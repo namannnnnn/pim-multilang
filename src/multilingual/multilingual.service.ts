@@ -366,26 +366,28 @@ export class Translator {
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
             if (request.lang_code == 'en') {
-                let language = request.lang_code
+                let language = request.lang_code;
                 delete request.lang_code;
-                let rule = await new RuleModel();
-                data = await rule.save();
+                // let rule = await new RuleModel(request);
+                // data = await rule.save();
                 data._id = (data._id).toString();
                 for (let i = 0; i < config[0].selected_languages.length; i++) {
                     if (config[0].selected_languages[i] == 'en') {
                     }
                     else {
+                        (request.translations)[config[0].selected_languages[i]] = ((request.translations).en)
                         for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
-                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3') {
+                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3' || toTranslate[0].translatable_fields[j] == 'setValue') {
                             }
                             else {
-                                (og_translation.translations[config[0].selected_languages[i]])[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
+                                (request.translations[config[0].selected_languages[i]])[toTranslate[0].translatable_fields[j]] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
                             }
-                            let rule = await new RuleModel(request);
-                            data = await rule.save();
+                            
                         }
                     }
                 }
+                let rule = await new RuleModel(request);
+                data = await rule.save();
             }
             else {
                 let language = request.lang_code;
@@ -393,7 +395,7 @@ export class Translator {
                 let englishState = JSON.parse(JSON.stringify(request));
                 let defaultState = JSON.parse(JSON.stringify(request));
                 for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                    if (toTranslate[0].translatable_fields[i] == 'conditions_2' || toTranslate[0].translatable_fields[i] == 'conditions_3') {
+                    if (toTranslate[0].translatable_fields[i] == 'conditions_2' || toTranslate[0].translatable_fields[i] == 'conditions_3'|| toTranslate[0].translatable_fields[i] == 'setValue') {
                     }
                     else {
                         englishState[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, (englishState.translations[language])[toTranslate[0].translatable_fields[i]], 'en');
@@ -407,7 +409,7 @@ export class Translator {
                     }
                     else {
                         for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
-                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3') {
+                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3' || toTranslate[0].translatable_fields[j] == 'setValue') {
                             }
                             else {
                                 og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
@@ -417,8 +419,10 @@ export class Translator {
                         }
                     }
                 }
-                return { status: 'success', response: data };
             }
+
+            return { status: 'success', response: data };
+
         } catch(error){
             console.log(error)
         }
