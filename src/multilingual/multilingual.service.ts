@@ -361,22 +361,25 @@ export class Translator {
 
         try {
             let data;
-            let toTranslate = await MultilingualModel.find({ 'name':"table_metadata", 'main_table_name':"defaultrules" })
-            let config = await UserSelectedModel.find({ 'tenant_id':(request.translations[request.lang_code]).tenant_id, 'org_id':(request.translations[request.lang_code]).org_id }, "selected_service selected_languages")
-            let og_translation = JSON.parse(JSON.stringify(request))
+            let toTranslate = await MultilingualModel.find({ 'name': "table_metadata", 'main_table_name': "defaultrules" });
+            let config = await UserSelectedModel.find({ 'tenant_id': (request.translations[request.lang_code]).tenant_id, 'org_id': (request.translations[request.lang_code]).org_id }, "selected_service selected_languages");
+            let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
-            if(request.lang_code == 'en') {
+            if (request.lang_code == 'en') {
+                let language = request.lang_code
                 delete request.lang_code;
                 let rule = await new RuleModel();
                 data = await rule.save();
                 data._id = (data._id).toString();
-                for(let i=0;i < config[0].selected_languages.length; i++){
-                    if(config[0].selected_languages[i] == 'en'){
-                    } else {
-                        for(let j=0;j<toTranslate[0].translatable_fields.length; j++) {
-                            if(toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3'){
-                            } else {
-                                og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, request.translations.en.toTranslate[0].translatable_fields[j], config[0].selected_languages[i]);
+                for (let i = 0; i < config[0].selected_languages.length; i++) {
+                    if (config[0].selected_languages[i] == 'en') {
+                    }
+                    else {
+                        for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
+                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3') {
+                            }
+                            else {
+                                (og_translation.translations[config[0].selected_languages[i]])[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
                             }
                             let rule = await new RuleModel(request);
                             data = await rule.save();
@@ -390,31 +393,32 @@ export class Translator {
                 let englishState = JSON.parse(JSON.stringify(request));
                 let defaultState = JSON.parse(JSON.stringify(request));
                 for (let i = 0; i < toTranslate[0].translatable_fields.length; i++) {
-                    if(toTranslate[0].translatable_fields[i] == 'conditions_2' || toTranslate[0].translatable_fields[i] == 'conditions_3'){
-                    } else {
-                        englishState[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, englishState.translations[language].toTranslate[0].translatable_fields[i], 'en');
+                    if (toTranslate[0].translatable_fields[i] == 'conditions_2' || toTranslate[0].translatable_fields[i] == 'conditions_3') {
+                    }
+                    else {
+                        englishState[toTranslate[0].translatable_fields[i]] = await this.translation(googleTranslator, (englishState.translations[language])[toTranslate[0].translatable_fields[i]], 'en');
                     }
                 }
                 delete englishState.lang_code;
                 let e = await new RuleModel(request);
                 let r = await e.save();
-                for(let i=0;i < config[0].selected_languages.length; i++){
-                    if(config[0].selected_languages[i] == 'en' || config[0].selected_languages[i] == language ){
-                    } else {
-                        for(let j=0;j<toTranslate[0].translatable_fields.length; j++) {
-                            if(toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3'){
-                            } else {
-                                og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, request.translations.en.toTranslate[0].translatable_fields[j], config[0].selected_languages[i]);
+                for (let i = 0; i < config[0].selected_languages.length; i++) {
+                    if (config[0].selected_languages[i] == 'en' || config[0].selected_languages[i] == language) {
+                    }
+                    else {
+                        for (let j = 0; j < toTranslate[0].translatable_fields.length; j++) {
+                            if (toTranslate[0].translatable_fields[j] == 'conditions_2' || toTranslate[0].translatable_fields[j] == 'conditions_3') {
+                            }
+                            else {
+                                og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
                             }
                             let rule = await new RuleModel(request);
                             data = await rule.save();
                         }
                     }
                 }
-                return { status : 'success', response : data }
+                return { status: 'success', response: data };
             }
-            // let req = new model(request);
-            // await req.save();
         } catch(error){
             console.log(error)
         }
