@@ -358,11 +358,11 @@ export class Translator {
         }
     }
 
-    async createDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName , googleTranslator) {
+    async createDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName, user , googleTranslator) {
         try {
             let data;
             let toTranslate = await MultilingualModel.find({ 'name': "table_metadata", 'main_table_name': collectionName });
-            let config = await UserSelectedModel.find({ 'tenant_id': (request.translations[request.lang_code]).tenant_id, 'org_id': (request.translations[request.lang_code]).org_id }, "selected_service selected_languages");
+            let config = await UserSelectedModel.find({ 'tenant_id': user.tenant_id, 'org_id': user.org_id }, "selected_service selected_languages");
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
             if (request.lang_code == 'en') {
@@ -458,11 +458,11 @@ export class Translator {
         }
     }
 
-    async updateDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName , googleTranslator) {
+    async updateDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName,user , googleTranslator) {
         try {
             let data;
             let toTranslate = await MultilingualModel.find({ 'name': "table_metadata", 'main_table_name': collectionName });
-            let config = await UserSelectedModel.find({ 'tenant_id': (request.translations[request.lang_code]).tenant_id, 'org_id': (request.translations[request.lang_code]).org_id }, "selected_service selected_languages");
+            let config = await UserSelectedModel.find({ 'tenant_id': user.tenant_id, 'org_id': user.org_id }, "selected_service selected_languages");
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
             if (request.lang_code == 'en') {
