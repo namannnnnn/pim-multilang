@@ -361,7 +361,9 @@ export class Translator {
     async createDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName, user , googleTranslator) {
         try {
             let data;
-            let toTranslate = await MultilingualModel.find({ 'name': "table_metadata", 'main_table_name': collectionName });
+            let toTranslate = await MultilingualModel.aggregate([
+                {$match: { main_table_name: collectionName }}
+              ]);
             let config = await UserSelectedModel.find({ 'tenant_id': user.tenant_id, 'org_id': user.org_id }, "selected_service selected_languages");
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
@@ -461,7 +463,9 @@ export class Translator {
     async updateDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName,user , googleTranslator) {
         try {
             let data;
-            let toTranslate = await MultilingualModel.find({ 'name': "table_metadata", 'main_table_name': collectionName });
+            let toTranslate = await MultilingualModel.aggregate([
+                {$match: { main_table_name: collectionName }}
+              ]);
             let config = await UserSelectedModel.find({ 'tenant_id': user.tenant_id, 'org_id': user.org_id }, "selected_service selected_languages");
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
