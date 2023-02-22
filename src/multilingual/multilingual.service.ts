@@ -472,7 +472,7 @@ export class Translator {
             if (request.lang_code == 'en') {
                 let language = request.lang_code;
                 delete request.lang_code;
-                data = await RuleModel.updateOne({ _id: request._id }, Object.assign({}, request));
+                data = await RuleModel.updateOne({ _id: request._id }, request);
                 for (let i = 0; i < config[0].selected_languages.length; i++) {
                     if (config[0].selected_languages[i] == 'en') {
                     }
@@ -498,9 +498,9 @@ export class Translator {
                         }
                     }
                 }
-                data = await RuleModel.updateOne({ _id: og_translation._id }, Object.assign({}, og_translation));
+                data = await RuleModel.updateOne({ _id: og_translation._id }, og_translation);
             } else {
-                data = await RuleModel.updateOne({ _id: request._id }, Object.assign({}, request));
+                data = await RuleModel.updateOne({ _id: request._id }, request);
             }
         } catch(error) {
             console.log(error);
