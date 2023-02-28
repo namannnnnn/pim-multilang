@@ -12,7 +12,7 @@ export class Translator {
 
     
 
-    async updateEntity(request, table_en, entityManager, googleTranslator) {
+    async updateEntity(request, table_en, entityManager, googleTranslator, use_raw ?: boolean ) {
         try {
             let toTranslate = await entityManager
                 .getRepository('table_metadata')
@@ -37,8 +37,12 @@ export class Translator {
                 .getRawOne();
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
-            let check = await this.checkTranslatable(request, table_en, entityManager, toTranslate[0]);
-            if (check.check) {
+            let check;
+            if (!use_raw){
+                check = await this.checkTranslatable(request, table_en, entityManager, toTranslate[0]);
+            } else {
+                check = await this.checkNonTranslatable(request, table_en, entityManager, toTranslate[0]);
+            }            if (check.check) {
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     let tableName = table_en + '_' + config.selected_languages[j];
                     if (config.selected_languages[j] == request.lang_code) {
@@ -195,6 +199,40 @@ export class Translator {
                     translatable_fields.push(toTranslate.translatable_fields[i]);
                 }
             }
+            return { check, translatable_fields };
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+    async checkNonTranslatable(request, table_en, entityManager, toTranslate) {
+        try {
+            let table_name;
+            if (request.lang_code == 'en') {
+                table_name = table_en;
+            }
+            else {
+                table_name = table_en + '_' + request.lang_code;
+            }
+            let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
+            let check = false;
+            let translatable_fields = [];
+            let keys = Object.keys(request)
+            for (let k = 0; k <keys.length; k++) {
+                if (!((toTranslate.translatable_fields).includes(keys[k]))){
+                    if (request[keys[k]] != oldRequest[keys[k]]) {
+                        check = true;
+                        translatable_fields.push(toTranslate.translatable_fields[k]);
+                    }
+                }
+            }
+            // for (let i = 0; i < toTranslate.translatable_fields.length; i++) {
+            //     if (request[toTranslate.translatable_fields[i]] != oldRequest[toTranslate.translatable_fields[i]]) {
+            //         check = true;
+            //         translatable_fields.push(toTranslate.translatable_fields[i]);
+            //     }
+            // }
             return { check, translatable_fields };
         }
         catch (error) {
