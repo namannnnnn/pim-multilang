@@ -215,7 +215,7 @@ export class Translator {
             else {
                 table_name = table_en + '_' + request.lang_code;
             }
-            let oldRequest = await entityManager.getRepository(table_name).find({ where: { id: request.id, tenant_id: request.tenant_id, org_id: request.org_id } });
+            let oldRequest = await entityManager.query(`SELECT * FROM ${table_name} WHERE id=${request.id} AND tenant_id='${request.tenant_id}' AND org_id='${request.org_id}'`)
             let check = false;
             let translatable_fields = [];
             let keys = Object.keys(request)
