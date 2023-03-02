@@ -12,13 +12,13 @@ export class Translator {
 
     
 
-    async updateEntity(request, table_en, entityManager, googleTranslator, use_raw ?: boolean ) {
+    async updateEntity(request, table_en, entityManager, googleTranslator, use_raw) {
         try {
             let toTranslate = await entityManager
                 .getRepository('table_metadata')
                 .find({
                 where: { main_table_name: table_en },
-                select: { translatable_fields: true },
+                select: { translatable_fields: true, id_column_name:true },
             });
             let config = await entityManager
                 .getRepository('user_selected_languages')
@@ -38,21 +38,42 @@ export class Translator {
             let og_translation = JSON.parse(JSON.stringify(request));
             delete og_translation.lang_code;
             let check;
-            if (!use_raw){
+            if (!use_raw) {
                 check = await this.checkTranslatable(request, table_en, entityManager, toTranslate[0]);
-            } else {
+            }
+            else {
                 check = await this.checkNonTranslatable(request, table_en, entityManager, toTranslate[0]);
-            }            if (check.check) {
+            }
+            if (check.check) {
+           
                 for (let j = 0; j < config.selected_languages.length; j++) {
                     let tableName = table_en + '_' + config.selected_languages[j];
+                   
                     if (config.selected_languages[j] == request.lang_code) {
                         if (config.selected_languages[j] == 'en') {
                             delete request.lang_code;
-                            await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                            const whereClause = {}
+                            whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                            // await entityManager.getRepository(table_en).update({ tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, request));
+                            // await entityManager.query(`select * from pdm_in0004_or0001_1191 where pdm_id=1`)
+                            const req = {...request}
+                            delete req[toTranslate[0]['id_column_name']]
+                            await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, req))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                         }
                         else {
                             delete request.lang_code;
-                            await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                            const whereClause = {}
+                            whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                            // await entityManager.getRepository(tableName).update({ tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, request));
+                            const req = {...request}
+                            delete req[toTranslate[0]['id_column_name']]
+                            await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, req))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                         }
                     }
                     else {
@@ -61,14 +82,32 @@ export class Translator {
                                 og_translation[check.translatable_fields[i]] =
                                     await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
                             }
-                            await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
+                            const whereClause = {}
+                            whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                            // await entityManager.getRepository(table_en).update({  tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, og_translation));
+                            const req = {...request}
+                            delete req[toTranslate[0]['id_column_name']]
+                            await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, og_translation))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                         }
                         else {
+                            
                             for (let i = 0; i < check.translatable_fields.length; i++) {
-                                og_translation[check.translatable_fields[i]] =
-                                    await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
+                               
+                                og_translation[check.translatable_fields[i]] = await this.translation(googleTranslator, request[check.translatable_fields[i]], config.selected_languages[j]);
                             }
-                            await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, og_translation));
+                  
+                            const whereClause = {}
+                            whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                            // await entityManager.getRepository(tableName).update({  tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, og_translation));
+                            const req = {...request}
+                            delete req[toTranslate[0]['id_column_name']]
+                            await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, og_translation))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                         }
                     }
                 }
@@ -78,11 +117,27 @@ export class Translator {
                     let tableName = table_en + '_' + config.selected_languages[j];
                     if (config.selected_languages[j] == 'en') {
                         delete request.lang_code;
-                        await entityManager.getRepository(table_en).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                        const whereClause = {}
+                        whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                        // await entityManager.getRepository(table_en).update({ tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, request));
+                        const req = {...request}
+                        delete req[toTranslate[0]['id_column_name']]
+                        await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, req))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                     }
                     else {
                         delete request.lang_code;
-                        await entityManager.getRepository(tableName).update({ id: request.id, tenant_id: request.tenant_id, org_id: request.org_id }, Object.assign({}, request));
+                        const whereClause = {}
+                        whereClause[toTranslate[0]['id_column_name']] = request[toTranslate[0]['id_column_name']]
+                        // await entityManager.getRepository(tableName).update({ tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, request));
+                        const req = {...request}
+                            delete req[toTranslate[0]['id_column_name']]
+                        await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, req))
+                            .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
+                            .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
+                            .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
                     }
                 }
             }
@@ -208,6 +263,7 @@ export class Translator {
 
     async checkNonTranslatable(request, table_en, entityManager, toTranslate) {
         try {
+           
             let table_name;
             if (request.lang_code == 'en') {
                 table_name = table_en;
@@ -215,24 +271,18 @@ export class Translator {
             else {
                 table_name = table_en + '_' + request.lang_code;
             }
-            let oldRequest = await entityManager.query(`SELECT * FROM ${table_name} WHERE id=${request.id} AND tenant_id='${request.tenant_id}' AND org_id='${request.org_id}'`)
+            let oldRequest = await entityManager.query(`SELECT * FROM ${table_name} WHERE ${toTranslate['id_column_name']}=${request[toTranslate['id_column_name']]} AND tenant_id='${request.tenant_id}' AND org_id='${request.org_id}'`);
             let check = false;
             let translatable_fields = [];
-            let keys = Object.keys(request)
-            for (let k = 0; k <keys.length; k++) {
-                if (!((toTranslate.translatable_fields).includes(keys[k]))){
+            let keys = Object.keys(request);
+            for (let k = 0; k < keys.length; k++) {
+                if (!((toTranslate.translatable_fields).includes(keys[k]))) {
                     if (request[keys[k]] != oldRequest[keys[k]]) {
                         check = true;
-                        translatable_fields.push(toTranslate.translatable_fields[k]);
+                        translatable_fields.push(keys[k]);
                     }
                 }
             }
-            // for (let i = 0; i < toTranslate.translatable_fields.length; i++) {
-            //     if (request[toTranslate.translatable_fields[i]] != oldRequest[toTranslate.translatable_fields[i]]) {
-            //         check = true;
-            //         translatable_fields.push(toTranslate.translatable_fields[i]);
-            //     }
-            // }
             return { check, translatable_fields };
         }
         catch (error) {
