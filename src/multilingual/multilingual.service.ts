@@ -12,7 +12,7 @@ export class Translator {
 
     
 
-    async updateEntity(request, table_en, entityManager, googleTranslator, use_raw) {
+    async updateEntity(request, table_en, entityManager, googleTranslator, use_raw?: boolean) {
         try {
             let toTranslate = await entityManager
                 .getRepository('table_metadata')
@@ -309,7 +309,7 @@ export class Translator {
         }
     }
 
-    async createEntity(request, table_en, entityManager, googleTranslator, use_raw) {
+    async createEntity(request, table_en, entityManager, googleTranslator, use_raw?: boolean) {
         try {
             let data;
             let toTranslate = await entityManager
