@@ -489,6 +489,7 @@ export class Translator {
                         }
                     }
                 }
+                
                 await RuleModel.updateOne({ _id: data._id }, Object.assign({}, og_translation));
             }
             else {
