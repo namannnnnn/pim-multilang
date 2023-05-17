@@ -1005,6 +1005,9 @@ export class Translator {
                     }
                 }
             }
+
+            return rule.conditions;
+
         } catch (error) {
             console.log(error);
         }
