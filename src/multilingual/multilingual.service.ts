@@ -231,7 +231,7 @@ export class Translator {
                 if(config.selected_languages[i] == 'en'){
                 } else {
                     let tableName = table_en + '_' + config.selected_languages[i];
-                    await entityManager.query(`CREATE TABLE attribute_masters (LIKE ${table_en} INCLUDING ALL)`)
+                    await entityManager.query(`CREATE TABLE "${tableName}" (LIKE ${table_en} INCLUDING ALL)`)
                 }
             }
 
