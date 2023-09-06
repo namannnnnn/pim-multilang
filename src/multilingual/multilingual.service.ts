@@ -58,7 +58,7 @@ export class Translator {
                             // await entityManager.query(`select * from pdm_in0004_or0001_1191 where pdm_id=1`)
                             const req = {...request}
                             delete req[toTranslate[0]['id_column_name']]
-                            await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, req))
+                            await entityManager.createQueryBuilder().update(table_en).set(Object.assign({}, req))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
@@ -70,7 +70,7 @@ export class Translator {
                             // await entityManager.getRepository(tableName).update({ tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, request));
                             const req = {...request}
                             delete req[toTranslate[0]['id_column_name']]
-                            await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, req))
+                            await entityManager.createQueryBuilder().update(tableName).set(Object.assign({}, req))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
@@ -87,7 +87,7 @@ export class Translator {
                             // await entityManager.getRepository(table_en).update({  tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, og_translation));
                             const req = {...request}
                             delete req[toTranslate[0]['id_column_name']]
-                            await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, og_translation))
+                            await entityManager.createQueryBuilder().update(table_en).set(Object.assign({}, og_translation))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
@@ -104,7 +104,7 @@ export class Translator {
                             // await entityManager.getRepository(tableName).update({  tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, og_translation));
                             const req = {...request}
                             delete req[toTranslate[0]['id_column_name']]
-                            await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, og_translation))
+                            await entityManager.createQueryBuilder().update(tableName).set(Object.assign({}, og_translation))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
@@ -122,7 +122,7 @@ export class Translator {
                         // await entityManager.getRepository(table_en).update({ tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, request));
                         const req = {...request}
                         delete req[toTranslate[0]['id_column_name']]
-                        await entityManager.connection.createQueryBuilder().update(table_en).set(Object.assign({}, req))
+                        await entityManager.createQueryBuilder().update(table_en).set(Object.assign({}, req))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
@@ -134,7 +134,7 @@ export class Translator {
                         // await entityManager.getRepository(tableName).update({ tenant_id: request.tenant_id, org_id: request.org_id, ...whereClause }, Object.assign({}, request));
                         const req = {...request}
                             delete req[toTranslate[0]['id_column_name']]
-                        await entityManager.connection.createQueryBuilder().update(tableName).set(Object.assign({}, req))
+                        await entityManager.createQueryBuilder().update(tableName).set(Object.assign({}, req))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
                             .andWhere(`org_id=:org_id`, {org_id: request.org_id}).execute()
