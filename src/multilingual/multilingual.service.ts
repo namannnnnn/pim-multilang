@@ -463,7 +463,7 @@ export class Translator {
                 let language = request.lang_code;
                 delete request.lang_code;
                 let rule = await new RuleModel(request);
-                data = await rule.save();
+                data = await rule.save({session});
                 data._id = (data._id).toString();
                 for (let i = 0; i < config[0].selected_languages.length; i++) {
                     if (config[0].selected_languages[i] == 'en') {
@@ -490,7 +490,7 @@ export class Translator {
                         }
                     }
                 }
-                await RuleModel.updateOne({ _id: data._id }, Object.assign({}, og_translation)).session(session);
+                await RuleModel.updateOne({ _id: data._id }, Object.assign({}, og_translation), {session});
             }
             else {
                 let language = request.lang_code;
@@ -517,7 +517,7 @@ export class Translator {
                 }
                 delete englishState.lang_code;
                 let e = await new RuleModel(request);
-                let r = await e.save();
+                let r = await e.save({session});
                 for (let i = 0; i < config[0].selected_languages.length; i++) {
                     if (config[0].selected_languages[i] == 'en' || config[0].selected_languages[i] == language) {
                     }
@@ -540,7 +540,7 @@ export class Translator {
                                 og_translation.translations[config[0].selected_languages[i]].toTranslate[0].translatable_fields[i] = await this.translation(googleTranslator, ((request.translations).en)[toTranslate[0].translatable_fields[j]], config[0].selected_languages[i]);
                             }
                             let rule = await new RuleModel(request);
-                            data = await rule.save();
+                            data = await rule.save({session});
                         }
                     }
                 }
@@ -598,7 +598,7 @@ export class Translator {
             console.log(error);
         }
     }
-    
+
     async prcocessConditions(rule, googleTranslator, lang_code) {
         try {
             if (rule.conditions.any) {
