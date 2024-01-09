@@ -5,6 +5,7 @@ import { google } from '@google-cloud/translate/build/protos/protos';
 import { Inject } from '@nestjs/common';
 import { response } from 'express';
 const { Translate } = v2;
+import { ClientSession } from "mongoose";
 import { EntityManager, QueryRunner } from 'typeorm';
 
 export class Translator {
@@ -57,7 +58,7 @@ export class Translator {
                             // await entityManager.getRepository(table_en).update({ tenant_id: request.tenant_id, org_id: request.org_id , ...whereClause}, Object.assign({}, request));
                             // await entityManager.query(`select * from pdm_in0004_or0001_1191 where pdm_id=1`)
                             const req = {...request}
-                            delete req[toTranslate[0]['id_column_name']]
+                            delete req[toTranslate[0]['id_column_name']];
                             await entityManager.createQueryBuilder().update(table_en).set(Object.assign({}, req))
                             .where(`${toTranslate[0]['id_column_name']} = :${toTranslate[0]['id_column_name']}`, whereClause)
                             .andWhere(`tenant_id=:tenant_id`,{tenant_id: request.tenant_id})
@@ -449,7 +450,7 @@ export class Translator {
         }
     }
 
-    async createDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName, user , googleTranslator) {
+    async createDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName, user , googleTranslator, session: ClientSession) {
         try {
             let data;
             let toTranslate = await MultilingualModel.aggregate([
@@ -489,7 +490,7 @@ export class Translator {
                         }
                     }
                 }
-                await RuleModel.updateOne({ _id: data._id }, Object.assign({}, og_translation));
+                await RuleModel.updateOne({ _id: data._id }, Object.assign({}, og_translation)).session(session);
             }
             else {
                 let language = request.lang_code;
@@ -551,7 +552,7 @@ export class Translator {
         }
     }
 
-    async updateDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName,user , googleTranslator) {
+    async updateDocument(RuleModel, MultilingualModel, UserSelectedModel, request,collectionName,user , googleTranslator, session: ClientSession) {
         try {
             let data;
             let toTranslate = await MultilingualModel.aggregate([
@@ -563,7 +564,7 @@ export class Translator {
             if (request.lang_code == 'en') {
                 let language = request.lang_code;
                 delete request.lang_code;
-                data = await RuleModel.updateOne({ _id: request._id }, request);
+                data = await RuleModel.updateOne({ _id: request._id }, request).session(session);
                 for (let i = 0; i < config[0].selected_languages.length; i++) {
                     if (config[0].selected_languages[i] == 'en') {
                     }
@@ -589,9 +590,9 @@ export class Translator {
                         }
                     }
                 }
-                data = await RuleModel.updateOne({ _id: og_translation._id }, og_translation);
+                data = await RuleModel.updateOne({ _id: og_translation._id }, og_translation).session(session);
             } else {
-                data = await RuleModel.updateOne({ _id: request._id }, request);
+                data = await RuleModel.updateOne({ _id: request._id }, request).session(session);
             }
         } catch(error) {
             console.log(error);

@@ -1,6 +1,6 @@
 {
   "name": "pim-multilang",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "",
   "author": "",
   "main": "dist/index.js",
@@ -26,6 +26,7 @@
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "mongoose": "^8.0.3",
     "typeorm": "^0.3.11"
   },
   "devDependencies": {
