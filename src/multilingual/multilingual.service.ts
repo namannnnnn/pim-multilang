@@ -598,6 +598,7 @@ export class Translator {
             console.log(error);
         }
     }
+    
     async prcocessConditions(rule, googleTranslator, lang_code) {
         try {
             if (rule.conditions.any) {
